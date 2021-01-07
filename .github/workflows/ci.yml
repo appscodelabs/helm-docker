@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+  # schedule:
+  #   # At 00:00 on Monday.
+  #   - cron: "0 0 * * 1"
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        helm:
+          - "2.16.12"
+          - "3.3.4"
+          - "3.4.2"
+          - "3.5.0-rc.2"
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: crazy-max/ghaction-docker-buildx@v1
+        with:
+          buildx-version: latest
+          qemu-version: latest
+
+      - name: Available platforms
+        run: echo ${{ steps.buildx.outputs.platforms }}
+
+      - name: Publish to GitHub Container Registry
+        env:
+          REGISTRY: ghcr.io/appscode
+          DOCKER_TOKEN: ${{ secrets.LGTM_GITHUB_TOKEN }}
+          USERNAME: 1gtm
+        run: |
+          docker login ghcr.io --username ${USERNAME} --password ${DOCKER_TOKEN}
+          make release RELEASE=${{ matrix.helm }}
+
+      - name: Publish to Docker Registry
+        env:
+          REGISTRY: appscode
+          DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+          USERNAME: 1gtm
+        run: |
+          docker login --username ${USERNAME} --password ${DOCKER_TOKEN}
+          make release RELEASE=${{ matrix.helm }}
