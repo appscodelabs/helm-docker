@@ -17,9 +17,11 @@ jobs:
       matrix:
         helm:
           - "2.16.12"
+          - "2.17.0"
           - "3.3.4"
           - "3.4.2"
-          - "3.5.0-rc.2"
+          - "3.5.4"
+          - "3.6.3"
     steps:
       - uses: actions/checkout@v1
 
