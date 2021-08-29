@@ -3,33 +3,30 @@ SHELL=/bin/bash -o pipefail
 REGISTRY   ?= appscode
 BIN        := helm
 IMAGE      := $(REGISTRY)/$(BIN)
-RELEASE    ?= 1.18
+RELEASE    ?= 1.20
 VERSION    ?= v$(RELEASE)
 
-DOCKER_PLATFORMS := linux/386 linux/amd64 # linux/arm64 linux/ppc64le linux/s390x
-OS               ?= linux
-ARCH             ?= amd64
-TAG              = $(VERSION)_$(OS)_$(ARCH)
+DOCKER_PLATFORMS := linux/amd64 linux/386 linux/arm64 # linux/ppc64le linux/s390x
+PLATFORM         ?= $(firstword $(DOCKER_PLATFORMS))
+TAG              = $(VERSION)_$(subst /,_,$(PLATFORM))
 
 container-%:
-	@$(MAKE) container                    \
-	    --no-print-directory              \
-	    OS=$(firstword $(subst _, ,$*))   \
-	    ARCH=$(lastword $(subst _, ,$*))
+	@$(MAKE) container \
+	    --no-print-directory \
+	    PLATFORM=$(subst _,/,$*)
 
 push-%:
-	@$(MAKE) push                         \
-	    --no-print-directory              \
-	    OS=$(firstword $(subst _, ,$*))   \
-	    ARCH=$(lastword $(subst _, ,$*))
+	@$(MAKE) push \
+	    --no-print-directory \
+	    PLATFORM=$(subst _,/,$*)
 
-all-container: $(addprefix container-, $(subst /,_, $(DOCKER_PLATFORMS)))
+all-container: $(addprefix container-, $(subst /,_,$(DOCKER_PLATFORMS)))
 
-all-push: $(addprefix push-, $(subst /,_, $(DOCKER_PLATFORMS)))
+all-push: $(addprefix push-, $(subst /,_,$(DOCKER_PLATFORMS)))
 
 container:
 	@echo "container: $(IMAGE):$(TAG)"
-	@DOCKER_CLI_EXPERIMENTAL=enabled docker buildx build --platform $(OS)/$(ARCH) --build-arg OS=$(OS) --build-arg ARCH=$(ARCH) --build-arg VERSION=$(VERSION) --load --pull -t $(IMAGE):$(TAG) -f Dockerfile .
+	@docker buildx build --platform $(PLATFORM) --build-arg VERSION=$(VERSION) --load --pull -t $(IMAGE):$(TAG) -f Dockerfile .
 	@echo
 
 push: container
@@ -39,15 +36,15 @@ push: container
 
 .PHONY: manifest-version
 manifest-version:
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create -a $(IMAGE):$(VERSION) $(foreach PLATFORM,$(DOCKER_PLATFORMS),$(IMAGE):$(VERSION)_$(subst /,_,$(PLATFORM)))
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(IMAGE):$(VERSION)
+	docker manifest create -a $(IMAGE):$(VERSION) $(foreach PLATFORM,$(DOCKER_PLATFORMS),$(IMAGE):$(VERSION)_$(subst /,_,$(PLATFORM)))
+	docker manifest push $(IMAGE):$(VERSION)
 
 .PHONY: manifest-release
 manifest-release:
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create -a $(IMAGE):v$(RELEASE) $(foreach PLATFORM,$(DOCKER_PLATFORMS),$(IMAGE):$(VERSION)_$(subst /,_,$(PLATFORM)))
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(IMAGE):v$(RELEASE)
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest create -a $(IMAGE):$(RELEASE) $(foreach PLATFORM,$(DOCKER_PLATFORMS),$(IMAGE):$(VERSION)_$(subst /,_,$(PLATFORM)))
-	DOCKER_CLI_EXPERIMENTAL=enabled docker manifest push $(IMAGE):$(RELEASE)
+	docker manifest create -a $(IMAGE):v$(RELEASE) $(foreach PLATFORM,$(DOCKER_PLATFORMS),$(IMAGE):$(VERSION)_$(subst /,_,$(PLATFORM)))
+	docker manifest push $(IMAGE):v$(RELEASE)
+	docker manifest create -a $(IMAGE):$(RELEASE) $(foreach PLATFORM,$(DOCKER_PLATFORMS),$(IMAGE):$(VERSION)_$(subst /,_,$(PLATFORM)))
+	docker manifest push $(IMAGE):$(RELEASE)
 
 .PHONY: docker-manifest
 docker-manifest: manifest-version manifest-release
