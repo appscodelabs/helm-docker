@@ -40,4 +40,6 @@ ARG VERSION
 LABEL org.opencontainers.image.source https://github.com/appscodelabs/helm-docker
 
 COPY --from=0 /tmp/release/curl-$TARGETARCH /usr/bin/curl
+COPY --from=0 /etc/ssl/certs/ca-certificates.crt /etc/ssl/certs/ca-certificates.crt
+
 COPY --from=1 /${TARGETOS}-${TARGETARCH}/helm /usr/bin/helm
