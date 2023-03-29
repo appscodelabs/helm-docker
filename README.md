@@ -1,3 +1,3 @@
 # helm-docker
 
-https://hub.docker.com/r/appscode/helm
+https://github.com/orgs/appscode/packages/container/package/helm
