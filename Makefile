@@ -1,6 +1,6 @@
 SHELL=/bin/bash -o pipefail
 
-REGISTRY   ?= appscode
+REGISTRY   ?= ghcr.io/appscode
 BIN        := helm
 IMAGE      := $(REGISTRY)/$(BIN)
 RELEASE    ?= 1.20

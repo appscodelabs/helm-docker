@@ -6,9 +6,11 @@ on:
   pull_request:
     branches: [master]
   workflow_dispatch:
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: true
+
 jobs:
   build:
     name: Build
@@ -26,7 +28,7 @@ jobs:
           # - "3.8.2"
           # - "3.9.4"
           - "3.10.3"
-          - "3.11.1"
+          - "3.11.2"
     steps:
       - uses: actions/checkout@v1
 
@@ -44,14 +46,4 @@ jobs:
           USERNAME: 1gtm
         run: |
           docker login ghcr.io --username ${USERNAME} --password ${DOCKER_TOKEN}
-          make release RELEASE=${{ matrix.helm }}
-
-      - name: Publish to Docker Registry
-        env:
-          REGISTRY: appscode
-          SRC_REG: ghcr.io/appscode
-          DOCKER_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
-          USERNAME: 1gtm
-        run: |
-          docker login --username ${USERNAME} --password ${DOCKER_TOKEN}
           make release RELEASE=${{ matrix.helm }}
