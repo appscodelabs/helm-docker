@@ -48,4 +48,7 @@ jobs:
           USERNAME: 1gtm
         run: |
           docker login ghcr.io --username ${USERNAME} --password ${DOCKER_TOKEN}
+          cd root
+          make release RELEASE=${{ matrix.helm }}
+          cd ../nonroot
           make release RELEASE=${{ matrix.helm }}
