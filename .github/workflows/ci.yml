@@ -41,11 +41,13 @@ jobs:
           - "3.19.2"
           - "4.0.0"
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@v4
 
       - name: Set up QEMU
         id: qemu
         uses: docker/setup-qemu-action@v3
+        with:
+          cache-image: false
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
